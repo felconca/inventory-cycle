@@ -1,50 +1,48 @@
-import { Stack, useRouter, useSegments } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Stack } from "expo-router";
+import { Provider } from "../context/auth";
 import * as SecureStore from "expo-secure-store";
-import { View, ActivityIndicator } from "react-native";
 
-export default function RootLayout() {
+export default function AuthLayout() {
   const [isReady, setIsReady] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const router = useRouter();
-  const segments = useSegments();
+  const [loadedUser, setLoadedUser] = useState(null);
+
+  const getUserFromStorage = async () => {
+    const user = await SecureStore.getItemAsync("loggedIn");
+    if (user) {
+      setLoadedUser(JSON.parse(user));
+    }
+    setIsReady(true);
+  };
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const session = await SecureStore.getItemAsync("loggedIn");
-        setIsLoggedIn(!!session);
-      } catch (err) {
-        console.error("Auth check error:", err);
-      } finally {
-        setIsReady(true);
-      }
-    };
-    checkAuth();
+    getUserFromStorage();
   }, []);
 
-  // Redirect logic
-  useEffect(() => {
-    if (!isReady) return;
-
-    const inAuthGroup = segments[0] === "login";
-
-    if (!isLoggedIn && !inAuthGroup) {
-      // not logged in → go to login
-      router.replace("/login");
-    } else if (isLoggedIn && inAuthGroup) {
-      // already logged in → go to home (receiving)
-      router.replace("/receiving");
-    }
-  }, [isReady, isLoggedIn, segments]);
-
-  if (!isReady) {
+  if (!isReady)
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color="#001209" />
+      <View style={styles.loading}>
+        <Text>Loading...</Text>
       </View>
     );
-  }
 
-  return <Stack screenOptions={{ headerShown: false, animation: "none" }} />;
+  return (
+    <Provider userCredentials={loadedUser}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: "none",
+        }}
+      ></Stack>
+    </Provider>
+  );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

@@ -1,22 +1,20 @@
 import React from "react";
 import { Text, View, StyleSheet, StatusBar } from "react-native";
-import AnimatedTabs from "../components/AnimatedTabs";
-import Header from "../components/Header";
+import AnimatedTabs from "../../components/AnimatedTabs";
+import Header from "../../components/Header";
 import * as SecureStore from "expo-secure-store";
 
 export default function StockTaking() {
   const [users, setUsers] = React.useState("");
   const tabs = [
-    { label: "Receiving", route: "/receiving" },
-    { label: "Stocktaking", route: "/stocktaking" },
+    { label: "Receiving", route: "/main/receiving" },
+    { label: "Stocktaking", route: "/main/stocktaking" },
   ];
 
   async function getValueFor(key) {
     let result = await SecureStore.getItemAsync(key);
     if (result) {
       setUsers(JSON.parse(result));
-    } else {
-      alert("No values stored under that key.");
     }
   }
   getValueFor("loggedIn");

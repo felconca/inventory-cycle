@@ -13,7 +13,7 @@ export default function Header({ users }) {
           <Text style={styles.titleSm}>General Ledger System Scanner</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.profile} onPress={() => router.navigate("profile")}>
+      <TouchableOpacity style={styles.profile} onPress={() => router.navigate("/main/profile")}>
         {users && users.user_img ? (
           <Image source={{ uri: `${APP_URL}/dump_px/${users.user_img}` }} style={styles.profileImg} />
         ) : (

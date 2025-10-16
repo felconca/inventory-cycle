@@ -15,13 +15,14 @@ export default function AnimatedTabs({ tabs = [] }) {
   });
 
   const translateX = useRef(new Animated.Value(0)).current;
-  const TAB_WIDTH = (width - 60) / tabs.length;
+  const TAB_WIDTH = (width - 30) / tabs.length;
+  const TABS_WIDTH = (width - 35) / tabs.length;
 
   const safeIndex = activeIndex === -1 ? 0 : activeIndex;
 
   useEffect(() => {
     Animated.spring(translateX, {
-      toValue: safeIndex * TAB_WIDTH,
+      toValue: safeIndex * TABS_WIDTH,
       useNativeDriver: true,
       friction: 7,
     }).start();
@@ -29,21 +30,10 @@ export default function AnimatedTabs({ tabs = [] }) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.tabContainer, { width: TAB_WIDTH * tabs.length }]}>
-        {/* Animated slider background */}
-        <Animated.View
-          style={[
-            styles.slider,
-            {
-              width: TAB_WIDTH,
-              transform: [{ translateX }],
-            },
-          ]}
-        />
-
-        {/* Tabs */}
+      <View style={styles.tabContainer}>
+        <Animated.View style={[styles.slider, { width: TABS_WIDTH, transform: [{ translateX }] }]} />
         {tabs.map((tab, index) => (
-          <Pressable key={index} style={[styles.tab, { width: TAB_WIDTH }]} onPress={() => router.push(tab.route)}>
+          <Pressable key={index} style={[styles.tab, { width: TABS_WIDTH }]} onPress={() => router.push(tab.route)}>
             <Text style={[styles.tabText, index === activeIndex && styles.activeText]}>{tab.label}</Text>
           </Pressable>
         ))}
@@ -54,39 +44,82 @@ export default function AnimatedTabs({ tabs = [] }) {
 
 const styles = StyleSheet.create({
   container: {
+    marginVertical: 15,
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 20,
   },
   tabContainer: {
     flexDirection: "row",
-    backgroundColor: "#f1f2f4",
+    alignItems: "center",
+    backgroundColor: "#EDEDED",
     borderRadius: 8,
+    width: width - 35,
+  },
+  tab: {
+    flexDirection: "row",
+    padding: 12,
+    borderRadius: 6,
+    zIndex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   slider: {
     position: "absolute",
     height: "100%",
     backgroundColor: "#fff",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  tab: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 15,
     borderRadius: 6,
-    zIndex: 1,
+    shadowColor: "#000",
+    borderWidth: 2,
+    borderColor: "#EDEDED",
   },
   tabText: {
     color: "#555",
-    fontWeight: "500",
+    fontWeight: "400",
   },
   activeText: {
     color: "#000",
     fontWeight: "600",
   },
 });
+
+// const styles = StyleSheet.create({
+//   container: {
+//     alignItems: "center",
+//     justifyContent: "center",
+//     marginVertical: 20,
+//   },
+//   tabContainer: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     backgroundColor: "#f1f2f4",
+//     borderRadius: 5,
+//     paddingHorizontal: 2,
+//     paddingVertical: 15,
+//   },
+//   slider: {
+//     position: "absolute",
+//     height: "100%",
+//     backgroundColor: "#fff",
+//     borderRadius: 5,
+//     shadowColor: "#000",
+//     paddingVertical: 20,
+
+//     // shadowOpacity: 0.05,
+//     // shadowRadius: 3,
+//     // elevation: 2,
+//   },
+//   tab: {
+//     alignItems: "center",
+//     justifyContent: "center",
+//     // paddingVertical: 5,
+//     zIndex: 1,
+//   },
+//   tabText: {
+//     color: "#555",
+//     fontWeight: "400",
+//   },
+//   activeText: {
+//     color: "#000",
+//     fontWeight: "600",
+//   },
+// });

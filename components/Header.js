@@ -2,6 +2,8 @@ import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, StatusBar } from "react-native";
 import { APP_URL } from "../api";
 import { router } from "expo-router";
+import AntDesign from "@expo/vector-icons/AntDesign";
+
 export default function Header({ users }) {
   return (
     <View style={styles.header}>
@@ -13,13 +15,19 @@ export default function Header({ users }) {
           <Text style={styles.titleSm}>General Ledger System Scanner</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.profile} onPress={() => router.navigate("/main/profile")}>
-        {users && users.user_img ? (
-          <Image source={{ uri: `${APP_URL}/dump_px/${users.user_img}` }} style={styles.profileImg} />
-        ) : (
-          <Image source={require("../user.png")} style={styles.profileImg} />
-        )}
-      </TouchableOpacity>
+
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        <TouchableOpacity style={styles.scanBtn} onPress={() => router.navigate("/main/scanner")}>
+          <AntDesign name="scan" size={24} color="#001209" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.profile} onPress={() => router.navigate("/main/profile")}>
+          {users && users.user_img ? (
+            <Image source={{ uri: `${APP_URL}/dump_px/${users.user_img}` }} style={styles.profileImg} />
+          ) : (
+            <Image source={require("../user.png")} style={styles.profileImg} />
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -58,5 +66,17 @@ const styles = StyleSheet.create({
   profileImg: {
     width: 30,
     height: 30,
+  },
+  scanBtn: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    // borderWidth: 1,
+    // borderColor: "#e4e4e4",
+    width: 35,
+    height: 35,
+    backgroundColor: "#f1f1f1",
+    borderRadius: 8,
+    overflow: "hidden",
   },
 });

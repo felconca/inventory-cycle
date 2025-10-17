@@ -4,7 +4,7 @@ import AnimatedTabs from "../../components/AnimatedTabs";
 import Header from "../../components/Header";
 import * as SecureStore from "expo-secure-store";
 
-export default function StockTaking() {
+export default function ItemsList() {
   const [users, setUsers] = React.useState("");
   const tabs = [
     { label: "Receiving", route: "/main/receiving" },
@@ -23,7 +23,7 @@ export default function StockTaking() {
     <View style={styles.container}>
       <Header users={users} />
       <AnimatedTabs tabs={tabs} />
-      <Text>Stock taking</Text>
+      <Text>Items List</Text>
     </View>
   );
 }

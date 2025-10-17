@@ -34,7 +34,7 @@ export default function Login() {
     } else {
       setLoading(true);
       try {
-        const res = await fetch(`${API_URL}/api_login`, {
+        const res = await fetch(`${API_URL}/mobile-api/api_login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),

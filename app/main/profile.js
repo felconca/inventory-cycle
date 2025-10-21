@@ -9,6 +9,7 @@ import { useAuth } from "../../context/auth";
 export default function Profile() {
   const { signOut } = useAuth();
   const [users, setUsers] = React.useState("");
+
   async function getValueFor(key) {
     let result = await SecureStore.getItemAsync(key);
     if (result) {
@@ -16,6 +17,9 @@ export default function Profile() {
     }
   }
   getValueFor("loggedIn");
+
+  const [imageUri, setImageUri] = React.useState(`${APP_URL}/dump_px/${users.user_img}`);
+  const defaultImage = require("../../user.png"); // Local default image
 
   const handleLogout = async () => {
     Alert.alert(
@@ -39,11 +43,18 @@ export default function Profile() {
       { cancelable: false } // Prevents dismissal by tapping outside
     );
   };
-
+  const handleImageError = () => {
+    setImageUri(Image.resolveAssetSource(defaultImage).uri); // Update to default image URI
+  };
   return (
     <View style={styles.container}>
       <View style={styles.profile}>
-        <Image source={{ uri: `${APP_URL}/dump_px/${users.user_img}` }} style={styles.profileImg} />
+        {/* <Image source={{ uri: `${APP_URL}/dump_px/${users.user_img}` }} style={styles.profileImg} /> */}
+        {users && users.user_img ? (
+          <Image source={{ uri: imageUri }} onError={handleImageError} style={styles.profileImg} />
+        ) : (
+          <Image source={require("../../user.png")} style={styles.profileImg} />
+        )}
       </View>
       <View style={{ marginVertical: 20 }}>
         <Text style={styles.userName}>{users.user_name}</Text>

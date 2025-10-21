@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StatusBar, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { Provider } from "../context/auth";
 import * as SecureStore from "expo-secure-store";
@@ -29,12 +29,20 @@ export default function AuthLayout() {
 
   return (
     <Provider userCredentials={loadedUser}>
+      <StatusBar animated={true} backgroundColor="#61dafb" barStyle={"dark-content"} />
       <Stack
         screenOptions={{
           headerShown: false,
           animation: "none",
         }}
-      ></Stack>
+      >
+        <Stack.Screen
+          name="receiving-modal"
+          options={{
+            presentation: "modal",
+          }}
+        />
+      </Stack>
     </Provider>
   );
 }

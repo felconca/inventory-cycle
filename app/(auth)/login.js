@@ -12,7 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useState } from "react";
-import { API_URL } from "../../api";
+import { API_URL, APP_URL } from "../../api";
 import * as SecureStore from "expo-secure-store";
 import { router } from "expo-router";
 import { useAuth } from "../../context/auth";
@@ -34,7 +34,7 @@ export default function Login() {
     } else {
       setLoading(true);
       try {
-        const res = await fetch(`${API_URL}/mobile-api/api_login`, {
+        const res = await fetch(`${APP_URL}/mobile-api/api_login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),

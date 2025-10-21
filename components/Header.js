@@ -5,9 +5,14 @@ import { router } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 
 export default function Header({ users }) {
+  const [imageUri, setImageUri] = React.useState(`${APP_URL}/dump_px/${users.user_img}`);
+  const defaultImage = require("../user.png"); // Local default image
+
+  const handleImageError = () => {
+    setImageUri(Image.resolveAssetSource(defaultImage).uri); // Update to default image URI
+  };
   return (
     <View style={styles.header}>
-      <StatusBar animated={true} backgroundColor="#61dafb" barStyle={"dark-content"} />
       <View style={styles.title}>
         <Image source={require("../logo.png")} style={{ width: 30, height: 30 }} />
         <View>
@@ -22,7 +27,7 @@ export default function Header({ users }) {
         </TouchableOpacity>
         <TouchableOpacity style={styles.profile} onPress={() => router.navigate("/main/profile")}>
           {users && users.user_img ? (
-            <Image source={{ uri: `${APP_URL}/dump_px/${users.user_img}` }} style={styles.profileImg} />
+            <Image source={{ uri: imageUri }} onError={handleImageError} style={styles.profileImg} />
           ) : (
             <Image source={require("../user.png")} style={styles.profileImg} />
           )}

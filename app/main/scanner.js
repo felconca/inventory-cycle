@@ -1,15 +1,20 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert, ToastAndroid } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert, ToastAndroid, Dimensions } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import QRCode from "react-native-qrcode-svg";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { APP_URL } from "../../api";
+import * as SecureStore from "expo-secure-store";
+import { Barcode } from "react-native-svg-barcode";
 
+const barcodeWidth = Dimensions.get("window").width / 2;
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState("back");
   const [scannedData, setScannedData] = useState(null);
   const [cornerColor, setCornerColor] = useState("#FFFFFF"); // white default
   const [cardAnim] = useState(new Animated.Value(0));
+  const [users, setUsers] = React.useState("");
 
   if (!permission) return <View />;
   if (!permission.granted) {
@@ -23,6 +28,13 @@ export default function App() {
     );
   }
 
+  async function getValueFor(key) {
+    let result = await SecureStore.getItemAsync(key);
+    if (result) {
+      setUsers(JSON.parse(result));
+    }
+  }
+  getValueFor("loggedIn");
   const handleBarCodeScanned = ({ data, type }) => {
     if (scannedData) return;
 
@@ -30,7 +42,26 @@ export default function App() {
     const isValid = /\d/.test(data);
     setCornerColor(isValid ? "#00C853" : "#D50000"); // green or red
 
-    setScannedData({ content: data, type });
+    fetch(`${APP_URL}/mobile-api/api_product_minimal?upc=${data}`, {
+      headers: {
+        Authorization: `Bearer ${users.user_token}`, // Include the Authorization header with the Bearer token
+        "Content-Type": "application/json", // Example of another common header
+      },
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        console.log("Validation result:", result);
+        if (result.status == 200) {
+          // ToastAndroid.show("Valid code!", ToastAndroid.SHORT);
+          setScannedData(result.data);
+        } else {
+          setScannedData("");
+          ToastAndroid.show(result.error, ToastAndroid.SHORT);
+        }
+      })
+      .catch((error) => {
+        console.error("Error validating code:", error);
+      });
 
     Animated.timing(cardAnim, {
       toValue: 1,
@@ -71,20 +102,20 @@ export default function App() {
   return (
     <View style={styles.container}>
       <CameraView
-        style={styles.camera}
+        style={[styles.camera, StyleSheet.absoluteFill]}
         facing={facing}
         onBarcodeScanned={scannedData ? undefined : handleBarCodeScanned}
-      >
-        {/* Scanner overlay (no full border, only corners) */}
-        <View style={styles.overlay}>
-          <View style={styles.frame}>
-            <View style={[styles.cornerTL, { borderColor: cornerColor }]} />
-            <View style={[styles.cornerTR, { borderColor: cornerColor }]} />
-            <View style={[styles.cornerBL, { borderColor: cornerColor }]} />
-            <View style={[styles.cornerBR, { borderColor: cornerColor }]} />
-          </View>
+      />
+      {/* Scanner overlay (no full border, only corners) */}
+      <View style={styles.overlay}>
+        <View style={styles.frame}>
+          <View style={[styles.cornerTL, { borderColor: cornerColor }]} />
+          <View style={[styles.cornerTR, { borderColor: cornerColor }]} />
+          <View style={[styles.cornerBL, { borderColor: cornerColor }]} />
+          <View style={[styles.cornerBR, { borderColor: cornerColor }]} />
         </View>
-      </CameraView>
+      </View>
+      {/* </CameraView> */}
 
       {/* Flip Camera Button */}
       <View style={styles.buttonContainer}>
@@ -96,20 +127,29 @@ export default function App() {
       {/* Floating Info Card */}
       {scannedData && (
         <Animated.View style={[styles.infoCard, { transform: [{ translateY }], opacity: cardAnim }]}>
-          <Text style={styles.itemTitle}>Scanned Code</Text>
-          <Text style={styles.itemType}>Type: {scannedData.type}</Text>
-          <Text style={styles.itemContent}>{scannedData.content}</Text>
+          <Text style={styles.itemTitle}>Product Information</Text>
+          <Text style={styles.itemType}>{scannedData.Description}</Text>
+          {/* <Text style={styles.itemContent}>{scannedData.UPC}</Text> */}
 
           <View style={styles.qrContainer}>
-            <QRCode value={scannedData.content || " "} size={100} backgroundColor="white" />
+            {/* <QRCode value={scannedData.UPC || " "} size={100} backgroundColor="white" /> */}
+            {/* <Barcode value={scannedData.UPC} backgroundColor="white" /> */}
+            <Barcode
+              value={scannedData.UPC}
+              background="white"
+              format="CODE128"
+              height={50}
+              text={scannedData.UPC}
+              maxWidth={barcodeWidth}
+            />
           </View>
 
           <View style={styles.btnGrp}>
             <TouchableOpacity onPress={handleAdd} style={styles.addButton}>
-              <Text style={styles.addButtonText}>Add Code</Text>
+              <Text style={styles.addButtonText}>Check Details</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={closeCard} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>Dismiss</Text>
+              <Text style={styles.closeButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -127,7 +167,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center" },
   message: { textAlign: "center", paddingBottom: 10 },
   permissionButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#02AA53",
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -212,7 +252,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: "#001209",
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -220,11 +260,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   itemTitle: { fontSize: 18, fontWeight: "600", marginBottom: 8 },
-  itemType: { fontSize: 14, color: "#555", marginBottom: 6 },
+  itemType: { fontSize: 14, color: "#555", marginBottom: 16, textAlign: "center" },
   itemContent: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#222",
+    color: "#001209",
     marginBottom: 12,
     textAlign: "center",
   },
@@ -242,10 +282,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
   },
-  closeButtonText: { color: "#333", fontWeight: "500" },
+  closeButtonText: { color: "#001209", fontWeight: "500" },
   addButtonText: { color: "#f0f0f0", fontWeight: "500" },
   addButton: {
-    backgroundColor: "#0F0F0F",
+    backgroundColor: "#001209",
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 8,

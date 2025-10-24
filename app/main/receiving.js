@@ -369,7 +369,10 @@ export default function Home() {
               <TouchableOpacity
                 style={[styles.btnBottomSheet, { backgroundColor: "#02AA53", gap: 6, paddingHorizontal: 16 }]}
                 onPress={() => {
-                  router.push({ pathname: "/main/receiving-modal", params: { id: item.RecRID } });
+                  router.push({
+                    pathname: "/main/receiving-modal",
+                    params: { id: item.RecRID, token: users.user_token },
+                  });
                   refRBSheet.current[index].close();
                 }}
               >

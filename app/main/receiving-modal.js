@@ -1,12 +1,19 @@
-import { StatusBar, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Pressable, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { API_URL } from "../../api";
+import { API_URL, APP_URL } from "../../api";
 import filterDate from "../../filter-date";
+import { Picker } from "@react-native-picker/picker";
+import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import Feather from "@expo/vector-icons/Feather";
 
 export default function ReceivingModal() {
-  const { id } = useLocalSearchParams();
+  const { id, token } = useLocalSearchParams();
   const [receiving, setReceiving] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [date, setDate] = useState(new Date());
+  const [activeField, setActiveField] = useState(null); // 'DRDated' or 'DRDueDate'
 
   const handleReceivingInfo = async () => {
     try {
@@ -23,9 +30,70 @@ export default function ReceivingModal() {
       console.error("API error:", err);
     }
   };
+  const handleVendorList = async () => {
+    try {
+      const res = await fetch(`${APP_URL}/mobile-api/api_vendor`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const vendorsList = await res.json();
+      // console.log("Vendors API result:", vendorsList);
+
+      // Adjust based on API structure
+      setVendors(vendorsList.data);
+    } catch (err) {
+      console.error("API error:", err);
+    }
+  };
+  const handleDeptList = async () => {
+    try {
+      const res = await fetch(`${APP_URL}/mobile-api/api_center`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const departmentsList = await res.json();
+      console.log("API result:", departmentsList);
+
+      // Adjust based on API structure
+      setDepartments(departmentsList.data);
+    } catch (err) {
+      console.error("API error:", err);
+    }
+  };
+  const onChange = (event, selectedDate) => {
+    if (!selectedDate) return;
+
+    setReceiving((prev) => ({
+      ...prev,
+      [activeField]: selectedDate, // update the field dynamically
+    }));
+
+    setActiveField(null); // reset after selection
+  };
+
+  const showPicker = (field, currentDate) => {
+    setActiveField(field);
+    DateTimePickerAndroid.open({
+      value: currentDate || new Date(),
+      onChange,
+      mode: "date",
+      display: "spinner",
+      is24Hour: true,
+    });
+  };
 
   useEffect(() => {
     handleReceivingInfo();
+    handleVendorList();
+    handleDeptList();
   }, []);
 
   const handlePoStatus = async (key) => {
@@ -66,7 +134,95 @@ export default function ReceivingModal() {
           By: {receiving.fname + " " + receiving.lname} - {filterDate(receiving.DREntered, "MMM dd, yyyy")}
         </Text>
       </View>
-      <View></View>
+      <Text style={styles.pickerText}>Supplier</Text>
+      <View style={styles.picker}>
+        <Picker
+          mode="dropdown"
+          selectedValue={receiving.VendorRID}
+          onValueChange={(value) => setReceiving({ ...receiving, VendorRID: value })}
+        >
+          <Picker.Item label="Select Vendor" value={0} color="#999" />
+          {(vendors || []).map((item, index) => (
+            <Picker.Item key={index} label={item.VendorName} value={item.VendorRID} />
+          ))}
+        </Picker>
+      </View>
+      <Text style={styles.pickerText}>Location</Text>
+      <View style={styles.picker}>
+        <Picker
+          mode="dropdown"
+          selectedValue={receiving.LocaRID}
+          onValueChange={(value) => setReceiving({ ...receiving, LocaRID: value })}
+        >
+          <Picker.Item label="Select Departments" value={0} color="#999" />
+          {(departments || []).map((item, index) => (
+            <Picker.Item key={index} label={item.center} value={item.centerRID} />
+          ))}
+        </Picker>
+      </View>
+      <View
+        style={{
+          gap: 10,
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {/* DR DATE */}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.pickerText}>DR Date</Text>
+          <Pressable
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderWidth: 1,
+              borderColor: "#EDEDED",
+              borderRadius: 6,
+              paddingHorizontal: 10,
+              paddingVertical: 8,
+            }}
+            onPress={() => showPicker("DRDated", new Date(receiving.DRDated))}
+            disabled={receiving.DRStatus > 1}
+          >
+            <TextInput
+              style={{ flex: 1 }}
+              placeholder="Select date"
+              editable={false}
+              value={filterDate(receiving.DRDated, "MMM dd, yyyy")}
+            />
+            <Feather name="calendar" size={16} color="#001209" />
+          </Pressable>
+        </View>
+
+        {/* DUE DATE */}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.pickerText}>DR Due Date</Text>
+          <Pressable
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderWidth: 1,
+              borderColor: "#EDEDED",
+              borderRadius: 6,
+              paddingHorizontal: 10,
+              paddingVertical: 8,
+            }}
+            onPress={() => showPicker("DRDueDate", new Date(receiving.DRDueDate))}
+            disabled={receiving.DRStatus > 1}
+          >
+            <TextInput
+              style={{ flex: 1 }}
+              placeholder="Select date"
+              editable={false}
+              value={filterDate(receiving.DRDueDate, "MMM dd, yyyy")}
+            />
+            <Feather name="calendar" size={16} color="#001209" />
+          </Pressable>
+        </View>
+      </View>
+
       <Text>Modal screen {JSON.stringify(receiving)}</Text>
     </View>
   );
@@ -101,5 +257,28 @@ const styles = StyleSheet.create({
     color: "#fff",
     paddingHorizontal: 12,
     paddingVertical: 5,
+  },
+  picker: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderColor: "#EDEDED",
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 10,
+  },
+  textInput: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderColor: "#EDEDED",
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  pickerText: {
+    fontWeight: "600",
+    color: "#001209",
+    marginBottom: 5,
+    paddingLeft: 5,
   },
 });
